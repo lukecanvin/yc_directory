@@ -11,6 +11,7 @@ import { formSchema } from "@/lib/validation";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { createPitch } from "@/lib/actions";
 
 const StartupForm = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -31,17 +32,17 @@ const StartupForm = () => {
 
       console.log(formValues);
 
-      // const result = await createIdea(prevState, formData, pitch);
-      // console.log("Form submitted successfully:", result);
+      const result = await createPitch(prevState, formData, pitch || "");
+      console.log("Form submitted successfully:", result);
 
-      // if (result.status === "SUCCESS") {
-      //   toast.success("Success", {
-      //     description: "Your startup pitch has been created successfully.",
-      //   });
-      //   router.push(`/startup/${result.id}`);
-      // }
+      if (result.status === "SUCCESS") {
+        toast.success("Success", {
+          description: "Your startup pitch has been created successfully.",
+        });
+        router.push(`/startup/${result._id}`);
+      }
 
-      // return result;
+      return result;
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErorrs = error.flatten().fieldErrors;
