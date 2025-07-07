@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
-import { AUTHORY_BY_GITHUB_ID_QUERY } from "./sanity/lib/queries";
+import { AUTHOR_BY_GITHUB_ID_QUERY } from "./sanity/lib/queries";
 import { client } from "./sanity/lib/client";
 import { writeClient } from "./sanity/lib/write-client";
 
@@ -12,7 +12,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       const existingUser = await client
         .withConfig({ useCdn: false })
-        .fetch(AUTHORY_BY_GITHUB_ID_QUERY, {
+        .fetch(AUTHOR_BY_GITHUB_ID_QUERY, {
           id: profile.id,
         });
 
@@ -36,7 +36,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account && profile) {
         const user = await client
           .withConfig({ useCdn: false })
-          .fetch(AUTHORY_BY_GITHUB_ID_QUERY, {
+          .fetch(AUTHOR_BY_GITHUB_ID_QUERY, {
             id: profile?.id,
           });
         token.id = user?._id;
