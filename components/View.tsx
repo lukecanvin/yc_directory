@@ -6,9 +6,11 @@ import { writeClient } from "@/sanity/lib/write-client";
 import { unstable_after as after } from "next/server";
 
 const View = async ({ id }: { id: string }) => {
-  const { views: totalViews } = await client
+  const startupViews = await client
     .withConfig({ useCdn: false })
     .fetch(STARTUP_VIEWS_QUERY, { id });
+
+  const totalViews = startupViews?.views || 0;
 
   after(
     async () =>
