@@ -16,19 +16,29 @@ import { createPitch } from "@/lib/actions";
 const StartupForm = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pitch, setPitch] = useState<string | undefined>("");
+  const [formValues, setFormValues] = useState({
+    title: "",
+    description: "",
+    category: "",
+    link: "",
+  });
   const router = useRouter();
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleFormSubmit = async (prevState: any, formData: FormData) => {
     try {
-      const formValues = {
-        title: formData.get("title") as string,
-        description: formData.get("description") as string,
-        category: formData.get("category") as string,
-        link: formData.get("link") as string,
+      const values = {
+        ...formValues,
         pitch,
       };
 
-      await formSchema.parseAsync(formValues);
+      await formSchema.parseAsync(values);
 
       console.log(formValues);
 
@@ -39,6 +49,13 @@ const StartupForm = () => {
         toast.success("Success", {
           description: "Your startup pitch has been created successfully.",
         });
+        setFormValues({
+          title: "",
+          description: "",
+          category: "",
+          link: "",
+        });
+        setPitch("");
         router.push(`/startup/${result._id}`);
       }
 
@@ -86,6 +103,8 @@ const StartupForm = () => {
           className="startup-form_input"
           required
           placeholder="Startup Title"
+          value={formValues.title}
+          onChange={handleChange}
         />
         {errors.title && <p className="startup-form_error">{errors.title}</p>}
       </div>
@@ -100,6 +119,8 @@ const StartupForm = () => {
           className="startup-form_textarea"
           required
           placeholder="Startup Description"
+          value={formValues.description}
+          onChange={handleChange}
         />
         {errors.description && (
           <p className="startup-form_error">{errors.description}</p>
@@ -117,6 +138,8 @@ const StartupForm = () => {
           className="startup-form_input"
           required
           placeholder="Startup Category (Tech, Health, Education, etc.)"
+          value={formValues.category}
+          onChange={handleChange}
         />
         {errors.category && (
           <p className="startup-form_error">{errors.category}</p>
@@ -134,6 +157,8 @@ const StartupForm = () => {
           className="startup-form_input"
           required
           placeholder="Startup Image URL"
+          value={formValues.link}
+          onChange={handleChange}
         />
         {errors.link && <p className="startup-form_error">{errors.link}</p>}
       </div>
