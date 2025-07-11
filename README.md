@@ -1,5 +1,7 @@
 # YC Directory
 
+**This is a tutorial application based on [FreeCodeCamp's Next.js 15 Course](https://www.youtube.com/watch?v=Zq5fmkH0T78). The majority of the code comes from that tutorial.**
+
 A Next.js application for browsing and managing a directory of startups, inspired by Y Combinator's directory.
 
 ## Features
