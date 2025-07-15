@@ -13,6 +13,27 @@
  */
 
 // Source: schema.json
+export type Vote = {
+  _id: string;
+  _type: "vote";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  user?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "author";
+  };
+  startup?: {
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    [internalGroqTypeReferenceTo]?: "startup";
+  };
+  voteType?: "up" | "down";
+};
+
 export type Playlist = {
   _id: string;
   _type: "playlist";
@@ -185,12 +206,22 @@ export type SanityAssetSourceData = {
   url?: string;
 };
 
-export type AllSanitySchemaTypes = Playlist | Startup | Author | Markdown | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageHotspot | SanityImageCrop | SanityFileAsset | SanityImageAsset | SanityImageMetadata | Geopoint | Slug | SanityAssetSourceData;
+export type AllSanitySchemaTypes = Vote | Playlist | Startup | Author | Markdown | SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | SanityImageHotspot | SanityImageCrop | SanityFileAsset | SanityImageAsset | SanityImageMetadata | Geopoint | Slug | SanityAssetSourceData;
 export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: sanity/lib/queries.ts
 // Variable: STARTUPS_QUERY
 // Query: *[_type == "startup" && defined(slug.current) && !defined($search) || title match $search || category match $search || author->name match $search] | order(_createdAt desc) {  _id,  title,  slug,  _createdAt,  author -> {    _id,    name,    image,    bio  },  views,  description,  category,  image}
 export type STARTUPS_QUERYResult = Array<{
+  _id: string;
+  title: null;
+  slug: null;
+  _createdAt: string;
+  author: null;
+  views: null;
+  description: null;
+  category: null;
+  image: null;
+} | {
   _id: string;
   title: string | null;
   slug: Slug | null;
@@ -327,6 +358,18 @@ export type PLAYLIST_BY_SLUG_QUERYResult = {
     pitch: string | null;
   }> | null;
 } | null;
+// Variable: STARTUP_VOTE_COUNTS_QUERY
+// Query: *[_type == "startup" && _id == $startupId][0]{    "thumbsUp": count(*[_type == "vote" && startup._ref == ^._id && voteType == "up"]),    "thumbsDown": count(*[_type == "vote" && startup._ref == ^._id && voteType == "down"])  }
+export type STARTUP_VOTE_COUNTS_QUERYResult = {
+  thumbsUp: number;
+  thumbsDown: number;
+} | null;
+// Variable: USER_VOTE_QUERY
+// Query: *[_type == "vote" && user._ref == $userId && startup._ref == $startupId][0]{    _id,    voteType  }
+export type USER_VOTE_QUERYResult = {
+  _id: string;
+  voteType: "down" | "up" | null;
+} | null;
 
 // Query TypeMap
 import "@sanity/client";
@@ -339,5 +382,7 @@ declare module "@sanity/client" {
     "\n*[_type == \"author\" && _id == $id][0]{\n    _id,\n    id,\n    name,\n    username,\n    email,\n    image,\n    bio\n}": AUTHOR_BY_ID_QUERYResult;
     "\n  *[_type == \"startup\" && author._ref == $id] | order(_createdAt desc) {\n  _id,\n  title,\n  slug,\n  _createdAt,\n  author -> {\n    _id,\n    name,\n    image,\n    bio\n  },\n  views,\n  description,\n  category,\n  image\n}": STARTUPS_BY_AUTHOR_QUERYResult;
     "*[_type == \"playlist\" && slug.current == $slug][0]{\n  _id,\n  title,\n  slug,\n  select[]->{\n    _id,\n    _createdAt,\n    title,\n    slug,\n    author->{\n      _id,\n      name,\n      slug,\n      image,\n      bio\n    },\n    views,\n    description,\n    category,\n    image,\n    pitch\n  }\n}": PLAYLIST_BY_SLUG_QUERYResult;
+    "\n  *[_type == \"startup\" && _id == $startupId][0]{\n    \"thumbsUp\": count(*[_type == \"vote\" && startup._ref == ^._id && voteType == \"up\"]),\n    \"thumbsDown\": count(*[_type == \"vote\" && startup._ref == ^._id && voteType == \"down\"])\n  }\n": STARTUP_VOTE_COUNTS_QUERYResult;
+    "\n  *[_type == \"vote\" && user._ref == $userId && startup._ref == $startupId][0]{\n    _id,\n    voteType\n  }\n": USER_VOTE_QUERYResult;
   }
 }

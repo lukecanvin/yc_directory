@@ -108,3 +108,17 @@ export const PLAYLIST_BY_SLUG_QUERY =
     pitch
   }
 }`);
+
+export const STARTUP_VOTE_COUNTS_QUERY = defineQuery(`
+  *[_type == "startup" && _id == $startupId][0]{
+    "thumbsUp": count(*[_type == "vote" && startup._ref == ^._id && voteType == "up"]),
+    "thumbsDown": count(*[_type == "vote" && startup._ref == ^._id && voteType == "down"])
+  }
+`);
+
+export const USER_VOTE_QUERY = defineQuery(`
+  *[_type == "vote" && user._ref == $userId && startup._ref == $startupId][0]{
+    _id,
+    voteType
+  }
+`);
