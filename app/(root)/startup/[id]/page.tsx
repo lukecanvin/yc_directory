@@ -31,9 +31,9 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     client.fetch(PLAYLIST_BY_SLUG_QUERY, {
       slug: "editor-picks",
     }),
-    client.fetch(STARTUP_VOTE_COUNTS_QUERY, { startupId: id }),
+    client.withConfig({ useCdn: false }).fetch(STARTUP_VOTE_COUNTS_QUERY, { startupId: id }),
     session?.id
-      ? client.fetch(USER_VOTE_QUERY, { startupId: id, userId: session.id })
+      ? client.withConfig({ useCdn: false }).fetch(USER_VOTE_QUERY, { startupId: id, userId: session.id })
       : Promise.resolve(null),
   ]);
 

@@ -87,9 +87,11 @@ export const submitVote = async (data: VoteSubmission): Promise<VoteActionResult
 
   try {
     // Check if startup exists
-    const startup = await client.fetch(`*[_type == "startup" && _id == $startupId][0]`, {
-      startupId,
-    });
+    const startup = await client
+      .withConfig({ useCdn: false })
+      .fetch(`*[_type == "startup" && _id == $startupId][0]`, {
+        startupId,
+      });
 
     if (!startup) {
       return {
@@ -99,10 +101,12 @@ export const submitVote = async (data: VoteSubmission): Promise<VoteActionResult
     }
 
     // Check if user already has a vote for this startup
-    const existingVote = await client.fetch(USER_VOTE_QUERY, {
-      userId: session.id,
-      startupId,
-    });
+    const existingVote = await client
+      .withConfig({ useCdn: false })
+      .fetch(USER_VOTE_QUERY, {
+        userId: session.id,
+        startupId,
+      });
 
     if (existingVote) {
       // Update existing vote
@@ -161,10 +165,12 @@ export const removeVote = async (data: VoteRemoval): Promise<VoteActionResult> =
 
   try {
     // Find the user's existing vote
-    const existingVote = await client.fetch(USER_VOTE_QUERY, {
-      userId: session.id,
-      startupId,
-    });
+    const existingVote = await client
+      .withConfig({ useCdn: false })
+      .fetch(USER_VOTE_QUERY, {
+        userId: session.id,
+        startupId,
+      });
 
     if (!existingVote) {
       return {
@@ -218,10 +224,12 @@ export const getUserVote = async (data: GetUserVoteParams): Promise<VoteActionRe
   }
 
   try {
-    const userVote = await client.fetch(USER_VOTE_QUERY, {
-      userId: session.id,
-      startupId,
-    });
+    const userVote = await client
+      .withConfig({ useCdn: false })
+      .fetch(USER_VOTE_QUERY, {
+        userId: session.id,
+        startupId,
+      });
 
     return {
       success: true,
