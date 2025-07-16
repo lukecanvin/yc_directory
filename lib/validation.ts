@@ -18,3 +18,20 @@ export const formSchema = z.object({
     }),
   pitch: z.string().min(10),
 });
+
+// Vote validation schemas
+export const voteSubmissionSchema = z.object({
+  startupId: z.string().min(1, "Startup ID is required"),
+  voteType: z.enum(["up", "down"], {
+    required_error: "Vote type must be either 'up' or 'down'",
+  }),
+});
+
+export const voteRemovalSchema = z.object({
+  startupId: z.string().min(1, "Startup ID is required"),
+});
+
+export const getUserVoteSchema = z.object({
+  startupId: z.string().min(1, "Startup ID is required"),
+  userId: z.string().min(1, "User ID is required"),
+});

@@ -6,6 +6,8 @@ import slugify from "slugify";
 import { writeClient } from "@/sanity/lib/write-client";
 import { client } from "@/sanity/lib/client";
 import { USER_VOTE_QUERY } from "@/sanity/lib/queries";
+import { voteSubmissionSchema, voteRemovalSchema, getUserVoteSchema } from "./validation";
+import type { VoteActionResult, VoteSubmission, VoteRemoval, GetUserVoteParams } from "./types";
 
 export const createPitch = async (
   state: any,
@@ -62,29 +64,26 @@ export const createPitch = async (
   }
 };
 
-export const submitVote = async (startupId: string, voteType: 'up' | 'down') => {
+export const submitVote = async (data: VoteSubmission): Promise<VoteActionResult> => {
   const session = await auth();
 
   if (!session) {
-    return parseServerActionResponse({
-      status: "ERROR",
-      error: "Not authenticated",
-    });
+    return {
+      success: false,
+      error: "UNAUTHENTICATED",
+    };
   }
 
-  if (!startupId || !voteType) {
-    return parseServerActionResponse({
-      status: "ERROR",
-      error: "Missing required parameters",
-    });
+  // Validate input data
+  const validationResult = voteSubmissionSchema.safeParse(data);
+  if (!validationResult.success) {
+    return {
+      success: false,
+      error: "VALIDATION_ERROR",
+    };
   }
 
-  if (voteType !== 'up' && voteType !== 'down') {
-    return parseServerActionResponse({
-      status: "ERROR",
-      error: "Invalid vote type",
-    });
-  }
+  const { startupId, voteType } = validationResult.data;
 
   try {
     // Check if startup exists
@@ -93,10 +92,10 @@ export const submitVote = async (startupId: string, voteType: 'up' | 'down') => 
     });
 
     if (!startup) {
-      return parseServerActionResponse({
-        status: "ERROR",
-        error: "Startup not found",
-      });
+      return {
+        success: false,
+        error: "STARTUP_NOT_FOUND",
+      };
     }
 
     // Check if user already has a vote for this startup
@@ -107,19 +106,13 @@ export const submitVote = async (startupId: string, voteType: 'up' | 'down') => 
 
     if (existingVote) {
       // Update existing vote
-      const result = await writeClient
+      await writeClient
         .patch(existingVote._id)
         .set({ voteType })
         .commit();
-
-      return parseServerActionResponse({
-        ...result,
-        status: "SUCCESS",
-        error: "",
-      });
     } else {
       // Create new vote
-      const result = await writeClient.create({
+      await writeClient.create({
         _type: "vote",
         user: {
           _type: "reference",
@@ -131,38 +124,40 @@ export const submitVote = async (startupId: string, voteType: 'up' | 'down') => 
         },
         voteType,
       });
-
-      return parseServerActionResponse({
-        ...result,
-        status: "SUCCESS",
-        error: "",
-      });
     }
+
+    return {
+      success: true,
+    };
   } catch (error) {
     console.error("Error submitting vote:", error);
-    return parseServerActionResponse({
-      status: "ERROR",
-      error: JSON.stringify(error),
-    });
+    return {
+      success: false,
+      error: "NETWORK_ERROR",
+    };
   }
 };
 
-export const removeVote = async (startupId: string) => {
+export const removeVote = async (data: VoteRemoval): Promise<VoteActionResult> => {
   const session = await auth();
 
   if (!session) {
-    return parseServerActionResponse({
-      status: "ERROR",
-      error: "Not authenticated",
-    });
+    return {
+      success: false,
+      error: "UNAUTHENTICATED",
+    };
   }
 
-  if (!startupId) {
-    return parseServerActionResponse({
-      status: "ERROR",
-      error: "Missing startup ID",
-    });
+  // Validate input data
+  const validationResult = voteRemovalSchema.safeParse(data);
+  if (!validationResult.success) {
+    return {
+      success: false,
+      error: "VALIDATION_ERROR",
+    };
   }
+
+  const { startupId } = validationResult.data;
 
   try {
     // Find the user's existing vote
@@ -172,44 +167,54 @@ export const removeVote = async (startupId: string) => {
     });
 
     if (!existingVote) {
-      return parseServerActionResponse({
-        status: "ERROR",
-        error: "No vote found to remove",
-      });
+      return {
+        success: false,
+        error: "STARTUP_NOT_FOUND",
+      };
     }
 
     // Delete the vote
-    const result = await writeClient.delete(existingVote._id);
+    await writeClient.delete(existingVote._id);
 
-    return parseServerActionResponse({
-      ...result,
-      status: "SUCCESS",
-      error: "",
-    });
+    return {
+      success: true,
+    };
   } catch (error) {
     console.error("Error removing vote:", error);
-    return parseServerActionResponse({
-      status: "ERROR",
-      error: JSON.stringify(error),
-    });
+    return {
+      success: false,
+      error: "NETWORK_ERROR",
+    };
   }
 };
 
-export const getUserVote = async (startupId: string) => {
+export const getUserVote = async (data: GetUserVoteParams): Promise<VoteActionResult> => {
   const session = await auth();
 
   if (!session) {
-    return parseServerActionResponse({
-      status: "ERROR",
-      error: "Not authenticated",
-    });
+    return {
+      success: false,
+      error: "UNAUTHENTICATED",
+    };
   }
 
-  if (!startupId) {
-    return parseServerActionResponse({
-      status: "ERROR",
-      error: "Missing startup ID",
-    });
+  // Validate input data
+  const validationResult = getUserVoteSchema.safeParse(data);
+  if (!validationResult.success) {
+    return {
+      success: false,
+      error: "VALIDATION_ERROR",
+    };
+  }
+
+  const { startupId, userId } = validationResult.data;
+
+  // Ensure the user can only get their own vote
+  if (userId !== session.id) {
+    return {
+      success: false,
+      error: "UNAUTHENTICATED",
+    };
   }
 
   try {
@@ -218,16 +223,15 @@ export const getUserVote = async (startupId: string) => {
       startupId,
     });
 
-    return parseServerActionResponse({
-      vote: userVote,
-      status: "SUCCESS",
-      error: "",
-    });
+    return {
+      success: true,
+      data: userVote,
+    };
   } catch (error) {
     console.error("Error getting user vote:", error);
-    return parseServerActionResponse({
-      status: "ERROR",
-      error: JSON.stringify(error),
-    });
+    return {
+      success: false,
+      error: "NETWORK_ERROR",
+    };
   }
 };

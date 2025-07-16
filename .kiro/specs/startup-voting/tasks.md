@@ -19,7 +19,12 @@
   - Add proper error handling and authentication checks
   - _Requirements: 1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 3.3, 3.4_
 
-- [ ] 4. Add TypeScript interfaces and validation
+- [x] 4. Add TypeScript interfaces and validation
+
+
+
+
+
   - Create TypeScript interfaces for vote-related data types
   - Add validation schemas for vote submission data
   - Update existing type definitions to include vote-related types
@@ -37,7 +42,7 @@
   - Build VoteButtons component with thumbs up and down buttons
   - Implement active state styling for user's current vote
   - Add loading states during vote submission
-  - Handle click events for vote submission and removal
+  - Handle click events for vote submission (clicking a non-active button) and removal (clicking an active button)
   - _Requirements: 1.1, 1.2, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3_
 
 - [ ] 7. Create main voting section component

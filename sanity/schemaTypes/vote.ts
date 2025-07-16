@@ -34,6 +34,32 @@ export const vote = defineType({
       validation: (Rule) => Rule.required(),
     }),
   ],
+  // Enforce uniqueness constraint: one vote per user per startup
+  validation: (Rule) =>
+    Rule.custom(async (doc: any, context) => {
+      if (!doc?.user?._ref || !doc?.startup?._ref) {
+        return true; // Let field validation handle missing references
+      }
+
+      const { getClient } = context;
+      const client = getClient({ apiVersion: "2023-01-01" });
+
+      // Check for existing votes by this user for this startup
+      const existingVotes = await client.fetch(
+        `*[_type == "vote" && user._ref == $userId && startup._ref == $startupId && _id != $currentId]`,
+        {
+          userId: doc.user._ref,
+          startupId: doc.startup._ref,
+          currentId: doc._id || "",
+        }
+      );
+
+      if (existingVotes.length > 0) {
+        return "A user can only vote once per startup. Update the existing vote instead.";
+      }
+
+      return true;
+    }),
   preview: {
     select: {
       userName: "user.name",
