@@ -3,6 +3,8 @@ import { client } from "@/sanity/lib/client";
 import {
   PLAYLIST_BY_SLUG_QUERY,
   STARTUP_BY_ID_QUERY,
+  STARTUP_VOTE_COUNTS_QUERY,
+  USER_VOTE_QUERY,
 } from "@/sanity/lib/queries";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,6 +14,9 @@ import markdownit from "markdown-it";
 import { Skeleton } from "@/components/ui/skeleton";
 import View from "@/components/View";
 import StartupCard, { StartupTypeCard } from "@/components/StartupCard";
+import VotingSection from "@/components/VotingSection";
+import { auth } from "@/auth";
+import { VoteCounts, UserVote } from "@/lib/types";
 
 export const experimental_ppr = true;
 
@@ -19,11 +24,17 @@ const md = markdownit();
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const id = (await params).id;
-  const [post, playlist] = await Promise.all([
+  const session = await auth();
+  
+  const [post, playlist, voteCounts, userVote] = await Promise.all([
     client.fetch(STARTUP_BY_ID_QUERY, { id }),
     client.fetch(PLAYLIST_BY_SLUG_QUERY, {
       slug: "editor-picks",
     }),
+    client.fetch(STARTUP_VOTE_COUNTS_QUERY, { startupId: id }),
+    session?.id 
+      ? client.fetch(USER_VOTE_QUERY, { startupId: id, userId: session.id })
+      : Promise.resolve(null),
   ]);
 
   const editorPosts = playlist?.select;
@@ -31,6 +42,17 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   if (!post) return notFound();
 
   const parsedContent = md.render(post?.pitch || "");
+  
+  // Prepare vote data with defaults
+  const initialVotes: VoteCounts = {
+    thumbsUp: voteCounts?.thumbsUp || 0,
+    thumbsDown: voteCounts?.thumbsDown || 0,
+  };
+  
+  const initialUserVote: UserVote | null = userVote ? {
+    _id: userVote._id,
+    voteType: userVote.voteType,
+  } : null;
 
   return (
     <>
@@ -82,6 +104,16 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
           ) : (
             <p className="no-result">No details provided</p>
           )}
+        </div>
+
+        {/* Voting Section - Only appears on detail pages */}
+        <div className="max-w-4xl mx-auto mt-10">
+          <VotingSection
+            startupId={id}
+            userId={session?.id}
+            initialVotes={initialVotes}
+            initialUserVote={initialUserVote}
+          />
         </div>
 
         <hr className="divider" />
