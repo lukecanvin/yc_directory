@@ -34,6 +34,7 @@ export interface VoteButtonsProps {
   startupId: string;
   userVote?: UserVote | null;
   onVoteChange?: (newCounts: VoteCounts) => void;
+  onError?: (error: VoteError) => void;
   disabled?: boolean;
   isLoading?: boolean;
 }

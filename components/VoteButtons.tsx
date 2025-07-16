@@ -10,6 +10,7 @@ const VoteButtons = ({
   startupId, 
   userVote, 
   onVoteChange, 
+  onError,
   disabled = false 
 }: VoteButtonsProps) => {
   const [isPending, startTransition] = useTransition();
@@ -34,6 +35,8 @@ const VoteButtons = ({
               ? { thumbsUp: -1, thumbsDown: 0 }
               : { thumbsUp: 0, thumbsDown: -1 };
             onVoteChange(newCounts);
+          } else if (!result.success && result.error && onError) {
+            onError(result.error);
           }
         } else {
           // User clicked different vote button or no existing vote - submit vote
@@ -58,6 +61,8 @@ const VoteButtons = ({
             }
             
             onVoteChange(newCounts);
+          } else if (!result.success && result.error && onError) {
+            onError(result.error);
           }
         }
       } catch (error) {
