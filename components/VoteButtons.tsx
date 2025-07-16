@@ -105,9 +105,7 @@ const VoteButtons = ({
             )} 
           />
         )}
-        <span className="text-14-normal">
-          {isThumbsUpActive ? "Voted" : "Up"}
-        </span>
+        {isThumbsUpActive ? "Voted" : "Up"}
       </button>
 
       {/* Thumbs Down Button */}
@@ -135,9 +133,7 @@ const VoteButtons = ({
             )} 
           />
         )}
-        <span className="text-14-normal">
-          {isThumbsDownActive ? "Voted" : "Down"}
-        </span>
+        {isThumbsDownActive ? "Voted" : "Down"}
       </button>
     </div>
   );

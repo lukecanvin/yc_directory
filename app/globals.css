@@ -143,6 +143,10 @@
     @apply bg-zinc-400 h-10 w-24 rounded-lg fixed bottom-3 right-3;
   }
 
+  .voting_skeleton {
+    @apply bg-zinc-400 h-32 w-full rounded-lg border border-black-100;
+  }
+
   /* navbar */
   .avatar {
     @apply p-0 focus-visible:ring-0 bg-none rounded-full drop-shadow-md;
